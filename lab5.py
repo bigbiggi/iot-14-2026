@@ -1,17 +1,13 @@
 from datetime import date
-from webbrowser import get
 
 
 class Medicine:
     def __init__(self, name, price, quantity, is_prescription_needed, expiration_date):
         self._name = name
-        self._price = price
+        self.price = price  # проходить через setter з валідацією
         self._quantity = quantity
         self._is_prescription_needed = is_prescription_needed
         self._expiration_date = expiration_date
-
-    def __del__(self):
-        print(f"Ліки {self._name} видалено з пам'яті")
 
     @property
     def name(self):
@@ -20,6 +16,17 @@ class Medicine:
     @property
     def price(self):
         return self._price
+
+    @price.setter
+    def price(self, value):
+        # bool є підкласом int, тому його перевіряємо окремо
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(
+                f"Ціна має бути числом, отримано {type(value).__name__}"
+            )
+        if value < 0:
+            raise ValueError("Ціна не може бути від'ємною")
+        self._price = value
 
     @property
     def quantity(self):
@@ -37,13 +44,6 @@ class Medicine:
         recipe = "так" if self._is_prescription_needed else "ні"
         print(f"Назва: {self._name} | Ціна: {self._price:.2f} | Кількість: {self._quantity} "
               f"| За рецептом: {recipe} | Придатні до: {self._expiration_date}")
-
-    def setPrice(self, price):
-        if not isinstance(price, (int, float)) or price < 0:
-            print("Некоректна ціна")
-            return
-        self._price = price
-        return
 
     def isExpired(self):
         return self._expiration_date < date.today()
@@ -85,7 +85,7 @@ class Pharmacy:
 
     def apply_discount(self):
         for medicine in self._medicines:
-            medicine.setPrice(round(medicine.price * 0.9, 2))
+            medicine.price = round(medicine.price * 0.9, 2)
 
     def show_cheapest(self):
         if not self._medicines:
@@ -105,7 +105,7 @@ class Pharmacy:
 
     def __iter__(self):
         return iter(self._medicines)
-    
+
 
 def main():
     pharmacy = Pharmacy()
@@ -126,7 +126,6 @@ def main():
 
     print("\n''' Переоблік (видалення прострочених) '''")
     pharmacy.inventory()
-    del med3
     pharmacy.show_all()
 
     print("\n''' Знижка 10% на всі ліки '''")
@@ -139,15 +138,14 @@ def main():
     print("\n''' Видалення ліків з аптеки '''")
     pharmacy.remove_medicine("Амоксицилін")
     pharmacy.remove_medicine("Невідомі ліки")
-    del med2
     pharmacy.show_all()
 
     print("\n''' Додавання нових ліків '''")
     pharmacy.add_medicine(Medicine("Но-шпа", 95, 25, False, date(2028, 2, 1)))
     pharmacy.show_all()
-    
+
     print("\n''' Кінець програми '''")
-    
+
 
 if __name__ == "__main__":
     main()
